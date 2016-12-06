@@ -18,6 +18,8 @@ import org.junit.BeforeClass;
 
 public class FJBufferedImage extends BufferedImage {
 
+	private static ForkJoinPool fjp = new ForkJoinPool();
+
 	private class SetRGBTask extends RecursiveAction {
 
 		int x;
@@ -27,8 +29,9 @@ public class FJBufferedImage extends BufferedImage {
 		int[] rgbArray;
 		int offset;
 		int scansize;
+		int min_h;
 
-		public SetRGBTask(int x, int y, int w, int h, int[] rgbArray, int offset, int scansize) {
+		public SetRGBTask(int x, int y, int w, int h, int[] rgbArray, int offset, int scansize, int min_h) {
 			this.x = x;
 			this.y = y;
 			this.w = w;
@@ -36,19 +39,19 @@ public class FJBufferedImage extends BufferedImage {
 			this.rgbArray = rgbArray;
 			this.offset = offset;
 			this.scansize = scansize;
+			this.min_h = min_h;
 		}
 
 		@Override
 		protected void compute() {
-			if (h <= 2) {
+			if (h <= min_h) {
 //				Height of 2 and full width of integers are baseline for cache performance (hopefully)
-//				if (w <= 8)
 				FJBufferedImage.super.setRGB(x, y, w, h, rgbArray, offset, scansize);
 			}
 			else {
 				int firstHalf = h/2;
-				invokeAll(new SetRGBTask(x, y, w, firstHalf, rgbArray, offset, scansize),
-							new SetRGBTask(x, y + firstHalf, w, h - firstHalf, rgbArray, offset + (firstHalf * scansize), scansize));
+				invokeAll(new SetRGBTask(x, y, w, firstHalf, rgbArray, offset, scansize, min_h),
+							new SetRGBTask(x, y + firstHalf, w, h - firstHalf, rgbArray, offset + (firstHalf * scansize), scansize, min_h));
 			}
 		}
 	}
@@ -97,6 +100,7 @@ public class FJBufferedImage extends BufferedImage {
 
 	public FJBufferedImage(ColorModel cm, WritableRaster raster, boolean isRasterPremultiplied,
 			Hashtable<?, ?> properties) {
+
 		super(cm, raster, isRasterPremultiplied, properties);
 	}
 	

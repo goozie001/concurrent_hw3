@@ -39,9 +39,9 @@ public class HW3TestGray {
 
 	static BufferedImage sourceImage;
 	static String sourceImageFilename;
-	static int WARMUPREPS = 5; // default value may be changed with command line
+	static int WARMUPREPS = 30; // default value may be changed with command line
 								// vm argument
-	static int REPS = 5; // default value may be changed with command line vm
+	static int REPS = 30; // default value may be changed with command line vm
 							// argument
 	static double meanSerialDuration;
 	static BufferedImage serialGray;
@@ -56,7 +56,7 @@ public class HW3TestGray {
 		// read source image
 		// The system property is set by command line vm argument
 		// Example:
-		sourceImageFilename = "/home/dylan/projects/concurrent_hw3/assets/image.jpg"; // System.getProperty("sourceImageFilename");
+		sourceImageFilename = "c:\\Users\\dylan\\projects\\concurrent_hw3\\assets\\image.jpg"; // System.getProperty("sourceImageFilename");
 		if (sourceImageFilename == null)
 			System.out.println(
 					"Provide image filename as system property on command line:  -DsourceImageFilename=\"C:\\Path\\to\\Pictures\\hw3photo.jpg\"");
@@ -111,13 +111,13 @@ public class HW3TestGray {
 		BufferedImage newImage = new BufferedImage(source.getWidth(), source.getHeight(), source.getType());
 		for (int rep = 0; rep < WARMUPREPS; rep++) {
 			Timer timerData = Gray.gray_SS(source, newImage);
-			System.out.println(timerData.toString());
+			//System.out.println(timerData.toString());
 		}
 		Timer[] timers = new Timer[REPS];
 		System.out.println("**starting runs included in statistics**");
 		for (int rep = 0; rep < REPS; rep++) {
 			timers[rep] = Gray.gray_SS(source, newImage);
-			System.out.println(timers[rep].toString());
+			//System.out.println(timers[rep].toString());
 		}
 		//write the last one
 		ImageIO.write(newImage, "jpg", output);
@@ -190,13 +190,13 @@ public class HW3TestGray {
 		FJBufferedImage newImage = new FJBufferedImage(source.getWidth(), source.getHeight(), source.getType());
 		for (int rep = 0; rep < WARMUPREPS; rep++) {
 			Timer timerData = Gray.gray_SS_FJ(source, newImage);
-			System.out.println(timerData.toString());
+			//System.out.println(timerData.toString());
 		}
 		Timer[] timers = new Timer[REPS];
 		//System.out.println("**starting runs included in statistics**");
 		for (int rep = 0; rep < REPS; rep++) {
 			timers[rep] = Gray.gray_SS_FJ(source, newImage);
-			System.out.println(timers[rep].toString());
+			//System.out.println(timers[rep].toString());
 		}
 		ImageIO.write(newImage, "jpg", output);
 
