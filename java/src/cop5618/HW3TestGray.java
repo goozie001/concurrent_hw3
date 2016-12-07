@@ -39,9 +39,9 @@ public class HW3TestGray {
 
 	static BufferedImage sourceImage;
 	static String sourceImageFilename;
-	static int WARMUPREPS = 30; // default value may be changed with command line
+	static int WARMUPREPS = 20; // default value may be changed with command line
 								// vm argument
-	static int REPS = 30; // default value may be changed with command line vm
+	static int REPS = 50; // default value may be changed with command line vm
 							// argument
 	static double meanSerialDuration;
 	static BufferedImage serialGray;
@@ -256,7 +256,7 @@ public class HW3TestGray {
 		test.testGray_SS();
 		test.testGray_PS();
 		test.testGray_SS_FJ();
-//		test.testGray_PS_FJ();
+		test.testGray_PS_FJ();
 	}
 
 }

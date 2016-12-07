@@ -11,6 +11,7 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveAction;
 import java.util.concurrent.RecursiveTask;
 import java.util.function.Function;
+//import java.util.concurrent.locks.AbstractQueuedSynchronizer;
 
 import javax.imageio.ImageIO;
 
@@ -19,6 +20,7 @@ import org.junit.BeforeClass;
 public class FJBufferedImage extends BufferedImage {
 
 	private static ForkJoinPool fjp = new ForkJoinPool();
+	private int min_h;
 
 	private class SetRGBTask extends RecursiveAction {
 
@@ -29,9 +31,9 @@ public class FJBufferedImage extends BufferedImage {
 		int[] rgbArray;
 		int offset;
 		int scansize;
-		int min_h;
+		int threads;
 
-		public SetRGBTask(int x, int y, int w, int h, int[] rgbArray, int offset, int scansize, int min_h) {
+		public SetRGBTask(int x, int y, int w, int h, int[] rgbArray, int offset, int scansize, int threads) {
 			this.x = x;
 			this.y = y;
 			this.w = w;
@@ -39,19 +41,19 @@ public class FJBufferedImage extends BufferedImage {
 			this.rgbArray = rgbArray;
 			this.offset = offset;
 			this.scansize = scansize;
-			this.min_h = min_h;
+			this.threads = threads;
 		}
 
 		@Override
 		protected void compute() {
-			if (h <= min_h) {
+			if (threads < 2) {
 //				Height of 2 and full width of integers are baseline for cache performance (hopefully)
 				FJBufferedImage.super.setRGB(x, y, w, h, rgbArray, offset, scansize);
 			}
 			else {
 				int firstHalf = h/2;
-				invokeAll(new SetRGBTask(x, y, w, firstHalf, rgbArray, offset, scansize, min_h),
-							new SetRGBTask(x, y + firstHalf, w, h - firstHalf, rgbArray, offset + (firstHalf * scansize), scansize, min_h));
+				invokeAll(new SetRGBTask(x, y, w, firstHalf, rgbArray, offset, scansize, threads/2),
+							new SetRGBTask(x, y + firstHalf, w, h - firstHalf, rgbArray, offset + (firstHalf * scansize), scansize, threads/2));
 			}
 		}
 	}
@@ -65,8 +67,9 @@ public class FJBufferedImage extends BufferedImage {
 		int[] rgbArray;
 		int offset;
 		int scansize;
+		int threads;
 
-		public GetRGBTask(int x, int y, int w, int h, int[] rgbArray, int offset, int scansize) {
+		public GetRGBTask(int x, int y, int w, int h, int[] rgbArray, int offset, int scansize, int threads) {
 			this.x = x;
 			this.y = y;
 			this.w = w;
@@ -74,18 +77,19 @@ public class FJBufferedImage extends BufferedImage {
 			this.rgbArray = rgbArray;
 			this.offset = offset;
 			this.scansize = scansize;
+			this.threads = threads;
 		}
 
 		@Override
 		protected void compute() {
-			if (h <= 2) {
+			if (threads < 2) {
 //				Height of 2 and full width of integers are baseline for cache performance (hopefully)
 				FJBufferedImage.super.getRGB(x, y, w, h, rgbArray, offset, scansize);
 			}
 			else {
 				int firstHalf = h/2;
-				invokeAll(new GetRGBTask(x, y, w, firstHalf, rgbArray, offset, scansize),
-						new GetRGBTask(x, y + firstHalf, w, h - firstHalf, rgbArray, offset + (firstHalf * scansize), scansize));
+				invokeAll(new GetRGBTask(x, y, w, firstHalf, rgbArray, offset, scansize, threads/2),
+						new GetRGBTask(x, y + firstHalf, w, h - firstHalf, rgbArray, offset + (firstHalf * scansize), scansize, threads/2));
 			}
 		}
 	}
@@ -100,8 +104,8 @@ public class FJBufferedImage extends BufferedImage {
 
 	public FJBufferedImage(ColorModel cm, WritableRaster raster, boolean isRasterPremultiplied,
 			Hashtable<?, ?> properties) {
-
 		super(cm, raster, isRasterPremultiplied, properties);
+		min_h = Math.max(1, getHeight() / fjp.getParallelism());
 	}
 	
 
@@ -111,26 +115,23 @@ public class FJBufferedImage extends BufferedImage {
 	 * @return
 	 */
 	public static FJBufferedImage BufferedImageToFJBufferedImage(BufferedImage source){
-	       Hashtable<String,Object> properties=null; 
-	       String[] propertyNames = source.getPropertyNames();
-	       if (propertyNames != null) {
-	    	   properties = new Hashtable<String,Object>();
-	    	   for (String name: propertyNames){properties.put(name, source.getProperty(name));}
-	    	   }
-	 	   return new FJBufferedImage(source.getColorModel(), source.getRaster(), source.isAlphaPremultiplied(), properties);		
+	   	Hashtable<String,Object> properties=null;
+	   	String[] propertyNames = source.getPropertyNames();
+	   	if (propertyNames != null) {
+			properties = new Hashtable<String,Object>();
+		   	for (String name: propertyNames){properties.put(name, source.getProperty(name));}
+		}
+	   return new FJBufferedImage(source.getColorModel(), source.getRaster(), source.isAlphaPremultiplied(), properties);
 	}
 	
 	@Override
 	public void setRGB(int xStart, int yStart, int w, int h, int[] rgbArray, int offset, int scansize){
-		new SetRGBTask(xStart, yStart, w, h, rgbArray, offset, scansize).compute();
+		fjp.invoke(new SetRGBTask(xStart, yStart, w, h, rgbArray, offset, scansize, fjp.getParallelism()));
 	}
-	
 
 	@Override
 	public int[] getRGB(int xStart, int yStart, int w, int h, int[] rgbArray, int offset, int scansize){
-		new GetRGBTask(xStart, yStart, w, h, rgbArray, offset, scansize).compute();
+		fjp.invoke(new GetRGBTask(xStart, yStart, w, h, rgbArray, offset, scansize, fjp.getParallelism()));
 		return rgbArray;
 	}
-	
-
-	}
+}
