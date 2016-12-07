@@ -83,7 +83,6 @@ public class FJBufferedImage extends BufferedImage {
 		@Override
 		protected void compute() {
 			if (threads < 2) {
-//				Height of 2 and full width of integers are baseline for cache performance (hopefully)
 				FJBufferedImage.super.getRGB(x, y, w, h, rgbArray, offset, scansize);
 			}
 			else {
@@ -126,12 +125,12 @@ public class FJBufferedImage extends BufferedImage {
 	
 	@Override
 	public void setRGB(int xStart, int yStart, int w, int h, int[] rgbArray, int offset, int scansize){
-		fjp.invoke(new SetRGBTask(xStart, yStart, w, h, rgbArray, offset, scansize, fjp.getParallelism()));
+		fjp.invoke(new SetRGBTask(xStart, yStart, w, h, rgbArray, offset, scansize, fjp.getParallelism() * 4));
 	}
 
 	@Override
 	public int[] getRGB(int xStart, int yStart, int w, int h, int[] rgbArray, int offset, int scansize){
-		fjp.invoke(new GetRGBTask(xStart, yStart, w, h, rgbArray, offset, scansize, fjp.getParallelism()));
+		fjp.invoke(new GetRGBTask(xStart, yStart, w, h, rgbArray, offset, scansize, fjp.getParallelism() * 4));
 		return rgbArray;
 	}
 }
