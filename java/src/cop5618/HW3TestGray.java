@@ -41,7 +41,7 @@ public class HW3TestGray {
 	static String sourceImageFilename;
 	static int WARMUPREPS = 10; // default value may be changed with command line
 								// vm argument
-	static int REPS = 50; // default value may be changed with command line vm
+	static int REPS = 20; // default value may be changed with command line vm
 							// argument
 	static double meanSerialDuration;
 	static BufferedImage serialGray;
@@ -56,7 +56,7 @@ public class HW3TestGray {
 		// read source image
 		// The system property is set by command line vm argument
 		// Example:
-		sourceImageFilename = "/home/dylan/projects/concurrent_hw3/assets/image.jpg"; // System.getProperty("sourceImageFilename");
+		sourceImageFilename = "C:\\Users\\dylan\\projects\\concurrent_hw3\\assets\\LotsaGators3.jpg";// System.getProperty("sourceImageFilename");
 		if (sourceImageFilename == null)
 			System.out.println(
 					"Provide image filename as system property on command line:  -DsourceImageFilename=\"C:\\Path\\to\\Pictures\\hw3photo.jpg\"");
