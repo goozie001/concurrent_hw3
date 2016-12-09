@@ -45,9 +45,8 @@ public class FJBufferedImage extends BufferedImage {
 
 		@Override
 		protected void compute() {
-			// Threads
+			// Split tasks until this holds one task OR the height of the calculation is one
 			if (tasks < 2 || h < 2) {
-//				Height of 2 and full width of integers are baseline for cache performance (hopefully)
 				FJBufferedImage.super.setRGB(x, y, w, h, rgbArray, offset, scansize);
 			}
 			else {
@@ -82,6 +81,7 @@ public class FJBufferedImage extends BufferedImage {
 
 		@Override
 		protected void compute() {
+			// Split tasks until this holds one task OR the height of the calculation is one
 			if (tasks < 2 || h < 2) {
 				FJBufferedImage.super.getRGB(x, y, w, h, rgbArray, offset, scansize);
 			}
@@ -124,6 +124,11 @@ public class FJBufferedImage extends BufferedImage {
 	
 	@Override
 	public void setRGB(int xStart, int yStart, int w, int h, int[] rgbArray, int offset, int scansize){
+		// Invoke up to 16 * the amount of parallelism available. If it wasn't a greater factor than the amount of parallelism
+		// available, there is no advantage of using the Fork/Join framework over other parallel paradigms since there would be
+		// no work stealing if there are no tasks left over in case one thread finishes faster. If the factor is too great,
+		// there is too much splitting and overhead and each individual base task does not have enough computing.
+		// I got the largest speedup with this value of 16, at about 2.2x for all parallelism with 4 cores.
 		fjp.invoke(new SetRGBTask(xStart, yStart, w, h, rgbArray, offset, scansize, fjp.getParallelism() * 16));
 	}
 

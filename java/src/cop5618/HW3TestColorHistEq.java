@@ -32,7 +32,7 @@ public class HW3TestColorHistEq {
 		// read source image
 		// The system property is set by command line vm argument
 		// Example:
-		sourceImageFilename = "C:\\Users\\dylan\\projects\\concurrent_hw3\\assets\\LotsaGators3.jpg";// System.getProperty("sourceImageFilename");
+		sourceImageFilename = "/home/dylan/projects/concurrent_hw3/assets/LotsaGators3.jpg";// System.getProperty("sourceImageFilename");
 		if (sourceImageFilename == null)
 			System.out.println(
 					"Provide image filename as system property on command line:  -DsourceImageFilename=\"C:\\Path\\to\\Pictures\\hw3photo.jpg\"");
